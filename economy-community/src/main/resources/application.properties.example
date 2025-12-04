@@ -18,5 +18,8 @@ jwt.secret=superSecretKeyForDevelopmentPleaseChangeInProduction
 # Identity Service URL
 identity.service.url=http://localhost:8081
 
+# Internal Service API Key (for service-to-service communication, must match Identity service)
+internal.api.key=service-secret-key-for-internal-communication
+
 # Logging Configuration
 logging.level.root=INFO

@@ -168,19 +168,36 @@ Each service has detailed documentation:
 
 ## 🔗 Inter-Service Communication
 
+Services communicate using **internal endpoints** protected by a shared API key:
+
 ```
 Matchmaking Service
-    ├─► Identity Service: GET /users/{id} (fetch player data)
-    └─► Identity Service: PUT /users/{id}/mmr (update MMR)
+    ├─► Identity Service: GET /internal/users/{id} (fetch player data)
+    └─► Identity Service: PUT /internal/users/{id}/mmr (update MMR)
+    └─► Uses X-Internal-API-Key header
 
 Economy-Community Service
-    └─► Identity Service: GET /users/{id} (verify user exists)
+    └─► Identity Service: GET /internal/users/{id} (verify user exists)
+    └─► Uses X-Internal-API-Key header
 
 Monitoring Service
     ├─► Identity Service: GET /metrics, GET /logs
     ├─► Matchmaking Service: GET /metrics, GET /logs
     └─► Economy-Community Service: GET /metrics, GET /logs
+    └─► No authentication required (public endpoints)
 ```
+
+### Internal API Authentication
+
+Services use a **shared internal API key** configured in `application.properties`:
+
+```properties
+internal.api.key=service-secret-key-for-internal-communication
+```
+
+Internal endpoints (`/internal/*`) require the `X-Internal-API-Key` header:
+- ✅ Correct key → Request succeeds
+- ❌ Wrong/missing key → 403 Forbidden
 
 ## 🛠️ Technology Stack
 
@@ -196,11 +213,13 @@ Monitoring Service
 
 ### 1. Identity-Player Service
 - User registration and authentication
-- JWT token generation
+- JWT token generation and validation
+- Protected endpoints with Spring Security
 - MMR (matchmaking rating) system
 - User profile management
 
 ### 2. Matchmaking Service
+- JWT-protected endpoints
 - Player queue management
 - Automatic match creation
 - Match result processing
@@ -208,6 +227,7 @@ Monitoring Service
 - Match history tracking
 
 ### 3. Economy-Community Service
+- JWT-protected endpoints
 - In-game purchase system
 - User-generated content (posts)
 - Post like/update/delete functionality
@@ -218,6 +238,7 @@ Monitoring Service
 - Centralized log collection
 - Service health monitoring
 - Historical data storage
+- Public endpoints for internal access
 
 ## 📊 Common Endpoints
 
@@ -234,35 +255,120 @@ curl -X POST http://localhost:8081/auth/register \
   -d '{"username":"player1","password":"pass","displayName":"Player 1"}'
 ```
 
-### 2. Join Matchmaking Queue
+Response:
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyLWlkLTEyMyJ9..."
+}
+```
+
+**Save this token!** You'll need it for all authenticated requests.
+
+### 2. Get All Users (Requires Authentication)
+```bash
+TOKEN="your-token-here"
+
+curl http://localhost:8081/users \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### 3. Join Matchmaking Queue (Requires Authentication)
 ```bash
 curl -X POST http://localhost:8082/queue/join \
+  -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"playerId":"<userId>"}'
 ```
 
-### 3. Make a Purchase
+### 4. Make a Purchase (Requires Authentication)
 ```bash
 curl -X POST http://localhost:8083/purchases \
+  -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"userId":"<userId>","itemName":"Sword","price":100}'
 ```
 
-### 4. View Monitoring Data
+### 5. View Monitoring Data (No Authentication Required)
 ```bash
 curl http://localhost:8084/monitoring/metrics
 curl http://localhost:8084/monitoring/logs
 ```
 
-## 🔐 Authentication
+## 🔐 Authentication & Security
 
-Services share a common JWT secret configured in `application.properties`:
+### JWT Authentication
 
-```properties
-jwt.secret=sdbdhjsfbfdsjbsdfjhidsbsfdjibsfdjbfds
+All services use **JWT (JSON Web Token)** for authentication:
+
+1. **Identity Service** generates tokens upon registration/login
+2. **All other services** validate tokens using the shared secret
+3. Tokens must be included in the `Authorization` header as `Bearer <token>`
+
+### Protected vs Public Endpoints
+
+#### Identity Service (8081)
+- ✅ **Public (No Auth):** `/auth/register`, `/auth/login`, `/metrics`, `/logs`
+- 🔒 **Protected (JWT Required):** `/users/*` (user management endpoints)
+- 🔑 **Internal (API Key Required):** `/internal/users/*` (service-to-service only)
+
+#### Matchmaking Service (8082)
+- ✅ **Public (No Auth):** `/metrics`, `/logs`
+- 🔒 **Protected (JWT Required):** `/queue/*`, `/matches/*`
+
+#### Economy-Community Service (8083)
+- ✅ **Public (No Auth):** `/metrics`, `/logs`
+- 🔒 **Protected (JWT Required):** `/purchases/*`, `/posts/*`
+
+#### Monitoring Service (8084)
+- ✅ **Public (No Auth):** All endpoints
+
+### How to Authenticate
+
+```bash
+# 1. Register or login to get a token
+TOKEN=$(curl -X POST http://localhost:8081/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"username":"user1","password":"pass","displayName":"User"}' \
+  | jq -r '.token')
+
+# 2. Use the token in all subsequent requests
+curl http://localhost:8081/users \
+  -H "Authorization: Bearer $TOKEN"
 ```
 
-Tokens are generated by the Identity service and can be validated by other services.
+### Shared JWT Secret
+
+All services share a common JWT secret in `application.properties`:
+
+```properties
+jwt.secret=superSecretKeyForDevelopmentPleaseChangeInProduction
+```
+
+**Important:** Change this secret in production!
+
+### Service-to-Service Authentication
+
+Services authenticate with each other using a **shared internal API key**:
+
+```properties
+# In all application.properties
+internal.api.key=service-secret-key-for-internal-communication
+```
+
+Example of internal API call:
+
+```bash
+# Services include this header when calling /internal/* endpoints
+curl http://localhost:8081/internal/users/123 \
+  -H "X-Internal-API-Key: service-secret-key-for-internal-communication"
+```
+
+**Why separate authentication?**
+- 🔒 **User API (JWT)** - For client applications (web, mobile)
+- 🔑 **Internal API (API Key)** - For service-to-service communication
+- 📊 **Monitoring API (Public)** - For internal monitoring tools
+
+**Important:** Change the internal API key in production!
 
 ## 📁 Project Structure
 
@@ -324,7 +430,8 @@ This project demonstrates:
 - **Database Design** - One database per service
 - **Inter-Service Communication** - HTTP REST calls between services
 - **Monitoring & Observability** - Centralized metrics and logging
-- **Authentication** - JWT-based auth system
+- **Authentication & Security** - JWT-based auth with Spring Security
+- **Protected Endpoints** - Token validation on all sensitive routes
 - **Spring Boot Best Practices** - Controller/Service/Repository pattern
 
 ## 📝 Notes
