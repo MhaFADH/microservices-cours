@@ -26,6 +26,8 @@ public class SecurityConfig {
                 .requestMatchers("/logs").permitAll()
                 .anyRequest().authenticated()
             )
+            .httpBasic(httpBasic -> httpBasic.disable())
+            .formLogin(formLogin -> formLogin.disable())
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
