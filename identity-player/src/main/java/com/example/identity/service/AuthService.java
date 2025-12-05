@@ -14,6 +14,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final JwtService jwtService;
     private final LogService logService;
+    private final MetricsService metricsService;
 
     public String register(RegisterDTO dto) {
         if (userRepository.existsByUsername(dto.getUsername())) {
@@ -43,7 +44,12 @@ public class AuthService {
             throw new RuntimeException("Invalid credentials");
         }
 
+        metricsService.incrementActiveUsers();
         logService.log("INFO", "User logged in: " + user.getUsername());
         return jwtService.generate(user.getId());
+    }
+
+    public void logout() {
+        metricsService.decrementActiveUsers();
     }
 }

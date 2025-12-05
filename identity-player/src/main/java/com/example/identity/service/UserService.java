@@ -22,8 +22,18 @@ public class UserService {
     }
 
     public UserDTO getUserById(String id) {
+        System.out.println("=== UserService.getUserById ===");
+        System.out.println("Looking for user with ID: '" + id + "'");
+        System.out.println("ID length: " + id.length());
+
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> {
+                    System.out.println("User not found in database!");
+                    System.out.println("Total users in DB: " + userRepository.count());
+                    return new RuntimeException("User not found");
+                });
+
+        System.out.println("User found: " + user.getUsername());
         return toDTO(user);
     }
 

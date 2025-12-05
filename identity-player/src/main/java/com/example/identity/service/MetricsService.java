@@ -16,7 +16,7 @@ public class MetricsService {
     }
 
     public void decrementActiveUsers() {
-        activeUsers.decrementAndGet();
+        activeUsers.updateAndGet(current -> Math.max(0, current - 1));
     }
 
     public Map<String, Object> getMetrics() {
