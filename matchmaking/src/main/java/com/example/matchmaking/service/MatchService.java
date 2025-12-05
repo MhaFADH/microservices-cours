@@ -25,7 +25,6 @@ public class MatchService {
         match.setStatus(Match.MatchStatus.IN_PROGRESS);
         matchRepository.save(match);
 
-        metricsService.incrementActiveMatches();
         logService.log("INFO", "Match created: " + match.getId() + " between " + player1Id + " and " + player2Id);
 
         return match;
@@ -67,7 +66,6 @@ public class MatchService {
         match.setPlayer2MmrChange(winnerId.equals(match.getPlayer2Id()) ? mmrChange : -mmrChange);
 
         matchRepository.save(match);
-        metricsService.decrementActiveMatches();
         logService.log("INFO", "Match completed: " + matchId + ", winner: " + winnerId);
 
         return match;

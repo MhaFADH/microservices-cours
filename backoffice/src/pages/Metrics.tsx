@@ -142,13 +142,27 @@ const Metrics = () => {
       setActivityData((prev) => {
         const now = new Date()
         const hours = now.getHours()
+        const minutes = now.getMinutes()
 
-        // Calculate hours since 8am today (or yesterday if before 8am)
-        let hoursSince8am = hours >= 8 ? hours - 8 : hours + 16
+        const timeStr = hours.toString().padStart(2, "0") + ":" + minutes.toString().padStart(2, "0")
 
-        // Create time label starting from 08:00
-        const displayHour = (hours >= 8 ? hours : hours + 24) % 24
-        const timeStr = displayHour.toString().padStart(2, "0") + ":00"
+        // Reset at 8am
+        if (hours === 8 && minutes < 10) {
+          const result = [{
+            time: timeStr,
+            users: totalUsers,
+            matches: Math.floor(totalUsers * 0.3),
+          }]
+
+          try {
+            localStorage.setItem("metricsActivityData", JSON.stringify(result))
+            localStorage.setItem("metricsActivityDate", now.toDateString())
+          } catch (err) {
+            console.error("Failed to save activity data:", err)
+          }
+
+          return result
+        }
 
         const newPoint = {
           time: timeStr,
@@ -156,12 +170,15 @@ const Metrics = () => {
           matches: Math.floor(totalUsers * 0.3),
         }
 
-        // Filter to only keep data from 8am onwards (reset at 8am)
-        const filtered = hours === 8 && now.getMinutes() < 10 ? [] : prev
+        // Check if data has changed compared to last point
+        const lastPoint = prev[prev.length - 1]
+        if (lastPoint && lastPoint.users === newPoint.users && lastPoint.matches === newPoint.matches) {
+          // Data hasn't changed, don't add new point
+          return prev
+        }
 
-        const updated = [...filtered, newPoint]
-        // Keep data points from 8am onwards (max 15 hours shown)
-        const result = updated.slice(-15)
+        // Data changed, add new point and keep last 60 points (1 hour of minute-level data)
+        const result = [...prev, newPoint].slice(-60)
 
         // Save to localStorage
         try {
@@ -334,7 +351,10 @@ const Metrics = () => {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={(entry) => entry.name + " " + calculatePercent(entry.value) + "%"}
+                  label={(entry) => {
+                    const percent = calculatePercent(entry.value)
+                    return percent === "0" ? "" : entry.name + " " + percent + "%"
+                  }}
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="value"

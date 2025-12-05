@@ -32,7 +32,6 @@ public class QueueService {
         entry.setMmr(mmr);
         queueRepository.save(entry);
 
-        metricsService.setQueueSize((int) queueRepository.count());
         logService.log("INFO", "Player joined queue: " + playerId);
 
         return entry;
@@ -46,7 +45,6 @@ public class QueueService {
         }
 
         queueRepository.deleteByPlayerId(playerId);
-        metricsService.setQueueSize((int) queueRepository.count());
         logService.log("INFO", "Player left queue: " + playerId);
     }
 
