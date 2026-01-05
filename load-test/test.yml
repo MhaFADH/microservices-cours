@@ -1,0 +1,78 @@
+config:
+  target: "http://localhost:8081"
+  phases:
+    - duration: 60
+      arrivalRate: 5
+
+scenarios:
+  - name: "Complete User Flow"
+    flow:
+      - post:
+          url: "/api/players/register"
+          json:
+            username: "user_{{ $randomNumber(1, 100000) }}"
+            email: "user_{{ $randomNumber(1, 100000) }}@test.com"
+            password: "Test123!"
+          capture:
+            - json: "$.id"
+              as: "playerId"
+
+      - post:
+          url: "/api/players/login"
+          json:
+            username: "{{ username }}"
+            password: "Test123!"
+          capture:
+            - json: "$.token"
+              as: "authToken"
+
+      - get:
+          url: "http://localhost:8083/api/economy/balance/{{ playerId }}"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+
+      - post:
+          url: "http://localhost:8082/api/matchmaking/join"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          json:
+            playerId: "{{ playerId }}"
+            gameMode: "ranked"
+          capture:
+            - json: "$.matchId"
+              as: "matchId"
+
+      - get:
+          url: "http://localhost:8082/api/matchmaking/status/{{ matchId }}"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+
+      - post:
+          url: "http://localhost:8082/api/matchmaking/leave"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          json:
+            playerId: "{{ playerId }}"
+            matchId: "{{ matchId }}"
+
+      - post:
+          url: "http://localhost:8082/api/matchmaking/complete"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          json:
+            matchId: "{{ matchId }}"
+            winnerId: "{{ playerId }}"
+
+      - post:
+          url: "http://localhost:8083/api/economy/purchase"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          json:
+            playerId: "{{ playerId }}"
+            itemId: "{{ $randomNumber(1, 100) }}"
+            quantity: 1
+
+      - get:
+          url: "http://localhost:8083/api/economy/balance/{{ playerId }}"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
