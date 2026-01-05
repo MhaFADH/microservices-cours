@@ -26,7 +26,7 @@ public class PostService {
         post.setContent(dto.getContent());
         postRepository.save(post);
 
-        metricsService.incrementPosts();
+        metricsService.incrementActiveUsers();
         logService.log("INFO", "Post created: " + dto.getTitle() + " by user " + dto.getAuthorId());
 
         return post;
@@ -78,7 +78,6 @@ public class PostService {
                 .orElseThrow(() -> new RuntimeException("Post not found"));
 
         postRepository.delete(post);
-        metricsService.decrementPosts();
         logService.log("INFO", "Post deleted: " + id);
     }
 }

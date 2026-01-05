@@ -25,7 +25,6 @@ public class PurchaseService {
         purchase.setPrice(dto.getPrice());
         purchaseRepository.save(purchase);
 
-        metricsService.incrementPurchases();
         logService.log("INFO", "Purchase created: " + dto.getItemName() + " for user " + dto.getUserId());
 
         return purchase;
