@@ -2,7 +2,7 @@ import { ReactNode } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { useAuth } from "@/contexts/AuthContext"
 import { Button } from "@/components/ui/button"
-import { LayoutDashboard, Users, TestTube, LogOut, BarChart3 } from "lucide-react"
+import { LayoutDashboard, Users, TestTube, LogOut, BarChart3, FileText } from "lucide-react"
 
 type LayoutProps = {
   children: ReactNode
@@ -23,6 +23,7 @@ const Layout = ({ children }: LayoutProps) => {
     { path: "/api-tester", label: "API Tester", icon: TestTube },
     { path: "/users", label: "Users", icon: Users },
     { path: "/metrics", label: "Metrics", icon: BarChart3 },
+    { path: "/logs", label: "Logs", icon: FileText },
   ]
 
   return (

@@ -6,6 +6,7 @@ import Dashboard from "@/pages/Dashboard"
 import ApiTester from "@/pages/ApiTester"
 import Users from "@/pages/Users"
 import Metrics from "@/pages/Metrics"
+import Logs from "@/pages/Logs"
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuth()
@@ -54,6 +55,16 @@ const App = () => {
               <ProtectedRoute>
                 <Layout>
                   <Metrics />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/logs"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <Logs />
                 </Layout>
               </ProtectedRoute>
             }

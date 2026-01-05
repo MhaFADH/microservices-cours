@@ -24,12 +24,6 @@ public class InternalApiKeyFilter extends OncePerRequestFilter {
         if (requestPath.startsWith("/internal/")) {
             String apiKey = request.getHeader("X-Internal-API-Key");
 
-            System.out.println("=== Internal API Key Filter ===");
-            System.out.println("Request Path: " + requestPath);
-            System.out.println("Received API Key: " + (apiKey != null ? "[PRESENT]" : "[MISSING]"));
-            System.out.println("Expected API Key: " + (internalApiKey != null ? "[CONFIGURED]" : "[NOT CONFIGURED]"));
-            System.out.println("Keys Match: " + (apiKey != null && apiKey.equals(internalApiKey)));
-
             if (apiKey == null || !apiKey.equals(internalApiKey)) {
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 response.getWriter().write("{\"error\":\"Invalid or missing internal API key\"}");
