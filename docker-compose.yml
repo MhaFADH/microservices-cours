@@ -20,7 +20,7 @@ services:
     ports:
       - ${MYSQL_PORT}:3306
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     volumes:
       - ./mysql-db:/var/lib/mysql
     restart: always
