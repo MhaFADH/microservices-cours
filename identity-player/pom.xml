@@ -14,12 +14,6 @@
 
     <groupId>com.example</groupId>
     <artifactId>identity-player</artifactId>
-    <configuration>
-        <jvmArguments>
-        -Xms1024m
-        -Xmx2048m
-        </jvmArguments>
-  </configuration>
     <version>1.0.0</version>
     <name>Identity-Player Service</name>
 
@@ -39,6 +33,10 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
         <dependency>
             <groupId>com.mysql</groupId>
@@ -67,6 +65,10 @@
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
@@ -74,6 +76,11 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <jvmArguments>
+                        -Xms1024m -Xmx2048m
+                    </jvmArguments>
+                </configuration>
             </plugin>
         </plugins>
     </build>

@@ -20,3 +20,10 @@ internal.api.key=service-secret-key-for-internal-communication
 
 # Logging Configuration
 logging.level.root=INFO
+
+# Actuator Endpoints Configuration
+management.endpoints.web.exposure.include=health,metrics,prometheus
+management.endpoint.health.show-details=always
+
+# Application Name
+spring.application.name=identity-player
