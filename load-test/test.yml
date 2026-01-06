@@ -1,24 +1,46 @@
 config:
   target: "http://localhost:8081"
+  processor: "./processors/jwt.js"
+  plugins:
+    fake-data: {}
   phases:
-    - duration: 60
+    - name: "Warm up"
+      duration: 60
       arrivalRate: 5
+    - name: "Ramp up to 50/s"
+      duration: 120
+      arrivalRate: 5
+      rampTo: 50
+    - name: "Sustained load 50/s"
+      duration: 180
+      arrivalRate: 50
+    - name: "Spike to 100/s"
+      duration: 60
+      arrivalRate: 100
+    - name: "Ramp down"
+      duration: 60
+      arrivalRate: 100
+      rampTo: 5
 
 scenarios:
   - name: "Complete User Flow"
     flow:
-      - post:
-          url: "/api/players/register"
-          json:
-            username: "user_{{ $randomNumber(1, 100000) }}"
-            email: "user_{{ $randomNumber(1, 100000) }}@test.com"
-            password: "Test123!"
-          capture:
-            - json: "$.id"
-              as: "playerId"
+      - function: "generateUsername"
 
       - post:
-          url: "/api/players/login"
+          url: "/auth/register"
+          json:
+            username: "{{ username }}"
+            password: "Test123!"
+            displayName: "{{ $randFullName() }}"
+          capture:
+            - json: "$.token"
+              as: "authToken"
+
+      - function: "decodeToken"
+
+      - post:
+          url: "/auth/login"
           json:
             username: "{{ username }}"
             password: "Test123!"
@@ -26,53 +48,37 @@ scenarios:
             - json: "$.token"
               as: "authToken"
 
-      - get:
-          url: "http://localhost:8083/api/economy/balance/{{ playerId }}"
-          headers:
-            Authorization: "Bearer {{ authToken }}"
+      - function: "decodeToken"
 
       - post:
-          url: "http://localhost:8082/api/matchmaking/join"
+          url: "http://localhost:8082/queue/join"
           headers:
             Authorization: "Bearer {{ authToken }}"
           json:
-            playerId: "{{ playerId }}"
-            gameMode: "ranked"
-          capture:
-            - json: "$.matchId"
-              as: "matchId"
+            playerId: "{{ userId }}"
 
       - get:
-          url: "http://localhost:8082/api/matchmaking/status/{{ matchId }}"
+          url: "http://localhost:8082/queue"
           headers:
             Authorization: "Bearer {{ authToken }}"
 
       - post:
-          url: "http://localhost:8082/api/matchmaking/leave"
+          url: "http://localhost:8082/queue/leave"
           headers:
             Authorization: "Bearer {{ authToken }}"
           json:
-            playerId: "{{ playerId }}"
-            matchId: "{{ matchId }}"
+            playerId: "{{ userId }}"
 
       - post:
-          url: "http://localhost:8082/api/matchmaking/complete"
+          url: "http://localhost:8083/purchases"
           headers:
             Authorization: "Bearer {{ authToken }}"
           json:
-            matchId: "{{ matchId }}"
-            winnerId: "{{ playerId }}"
-
-      - post:
-          url: "http://localhost:8083/api/economy/purchase"
-          headers:
-            Authorization: "Bearer {{ authToken }}"
-          json:
-            playerId: "{{ playerId }}"
-            itemId: "{{ $randomNumber(1, 100) }}"
-            quantity: 1
+            userId: "{{ userId }}"
+            itemName: "{{ $randProduct() }}"
+            price: "{{ $randNumber(100, 1000) }}"
 
       - get:
-          url: "http://localhost:8083/api/economy/balance/{{ playerId }}"
+          url: "http://localhost:8083/purchases/user/{{ userId }}"
           headers:
             Authorization: "Bearer {{ authToken }}"
