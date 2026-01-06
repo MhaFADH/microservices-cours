@@ -144,3 +144,5 @@ load-test/*.html
 .history/
 *.bak
 *.cache
+
+mysql-db
