@@ -31,12 +31,12 @@ A complete microservices-based backend system built with Spring Boot, MySQL, and
 
 ## 📋 Services Overview
 
-| Service | Port | Database | Purpose |
-|---------|------|----------|---------|
-| **Identity-Player** | 8081 | db_identity | User authentication, profiles, MMR management |
-| **Matchmaking** | 8082 | db_matchmaking | Queue management, match creation, match history |
-| **Economy-Community** | 8083 | db_economy | In-game purchases, user posts, community features |
-| **Monitoring** | 8084 | db_monitoring | Centralized metrics and logs collection |
+| Service               | Port | Database       | Purpose                                           |
+| --------------------- | ---- | -------------- | ------------------------------------------------- |
+| **Identity-Player**   | 8081 | db_identity    | User authentication, profiles, MMR management     |
+| **Matchmaking**       | 8082 | db_matchmaking | Queue management, match creation, match history   |
+| **Economy-Community** | 8083 | db_economy     | In-game purchases, user posts, community features |
+| **Monitoring**        | 8084 | db_monitoring  | Centralized metrics and logs collection           |
 
 ## 🚀 Quick Start Guide
 
@@ -69,6 +69,7 @@ cp monitoring/src/main/resources/application.properties.example \
 ```
 
 Then edit each `application.properties` file and replace:
+
 - `YOUR_MYSQL_HOST` with your MySQL host (e.g., `localhost` or `mysql.orb.local`)
 - `YOUR_MYSQL_USERNAME` with your MySQL username (e.g., `root`)
 - `YOUR_MYSQL_PASSWORD` with your MySQL password
@@ -141,8 +142,15 @@ mvn spring-boot:run
 ```
 
 **Important:**
+
 - Identity service (8081) must start first because other services depend on it
 - Monitoring service (8084) should start last to ensure all services are available for scraping
+
+Start prometheus (http://localhost:9090):
+
+```bash
+docker-compose up prometheus
+```
 
 ### Step 5: Verify All Services Are Running
 
@@ -196,6 +204,7 @@ internal.api.key=service-secret-key-for-internal-communication
 ```
 
 Internal endpoints (`/internal/*`) require the `X-Internal-API-Key` header:
+
 - ✅ Correct key → Request succeeds
 - ❌ Wrong/missing key → 403 Forbidden
 
@@ -212,6 +221,7 @@ Internal endpoints (`/internal/*`) require the `X-Internal-API-Key` header:
 ## 🎯 Key Features
 
 ### 1. Identity-Player Service
+
 - User registration and authentication
 - JWT token generation and validation
 - Protected endpoints with Spring Security
@@ -219,6 +229,7 @@ Internal endpoints (`/internal/*`) require the `X-Internal-API-Key` header:
 - User profile management
 
 ### 2. Matchmaking Service
+
 - JWT-protected endpoints
 - Player queue management
 - Automatic match creation
@@ -227,6 +238,7 @@ Internal endpoints (`/internal/*`) require the `X-Internal-API-Key` header:
 - Match history tracking
 
 ### 3. Economy-Community Service
+
 - JWT-protected endpoints
 - In-game purchase system
 - User-generated content (posts)
@@ -234,6 +246,7 @@ Internal endpoints (`/internal/*`) require the `X-Internal-API-Key` header:
 - User purchase history
 
 ### 4. Monitoring Service
+
 - Automatic metrics scraping (every 5 seconds)
 - Centralized log collection
 - Service health monitoring
@@ -243,12 +256,14 @@ Internal endpoints (`/internal/*`) require the `X-Internal-API-Key` header:
 ## 📊 Common Endpoints
 
 All services expose:
+
 - `GET /metrics` - Service-specific metrics
 - `GET /logs` - Recent service logs
 
 ## 🧪 Testing the System
 
 ### 1. Register a User
+
 ```bash
 curl -X POST http://localhost:8081/auth/register \
   -H "Content-Type: application/json" \
@@ -256,15 +271,17 @@ curl -X POST http://localhost:8081/auth/register \
 ```
 
 Response:
+
 ```json
 {
-  "token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyLWlkLTEyMyJ9..."
+	"token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyLWlkLTEyMyJ9..."
 }
 ```
 
 **Save this token!** You'll need it for all authenticated requests.
 
 ### 2. Get All Users (Requires Authentication)
+
 ```bash
 TOKEN="your-token-here"
 
@@ -273,6 +290,7 @@ curl http://localhost:8081/users \
 ```
 
 ### 3. Join Matchmaking Queue (Requires Authentication)
+
 ```bash
 curl -X POST http://localhost:8082/queue/join \
   -H "Authorization: Bearer $TOKEN" \
@@ -281,6 +299,7 @@ curl -X POST http://localhost:8082/queue/join \
 ```
 
 ### 4. Make a Purchase (Requires Authentication)
+
 ```bash
 curl -X POST http://localhost:8083/purchases \
   -H "Authorization: Bearer $TOKEN" \
@@ -289,6 +308,7 @@ curl -X POST http://localhost:8083/purchases \
 ```
 
 ### 5. View Monitoring Data (No Authentication Required)
+
 ```bash
 curl http://localhost:8084/monitoring/metrics
 curl http://localhost:8084/monitoring/logs
@@ -307,19 +327,23 @@ All services use **JWT (JSON Web Token)** for authentication:
 ### Protected vs Public Endpoints
 
 #### Identity Service (8081)
+
 - ✅ **Public (No Auth):** `/auth/register`, `/auth/login`, `/metrics`, `/logs`
 - 🔒 **Protected (JWT Required):** `/users/*` (user management endpoints)
 - 🔑 **Internal (API Key Required):** `/internal/users/*` (service-to-service only)
 
 #### Matchmaking Service (8082)
+
 - ✅ **Public (No Auth):** `/metrics`, `/logs`
 - 🔒 **Protected (JWT Required):** `/queue/*`, `/matches/*`
 
 #### Economy-Community Service (8083)
+
 - ✅ **Public (No Auth):** `/metrics`, `/logs`
 - 🔒 **Protected (JWT Required):** `/purchases/*`, `/posts/*`
 
 #### Monitoring Service (8084)
+
 - ✅ **Public (No Auth):** All endpoints
 
 ### How to Authenticate
@@ -364,6 +388,7 @@ curl http://localhost:8081/internal/users/123 \
 ```
 
 **Why separate authentication?**
+
 - 🔒 **User API (JWT)** - For client applications (web, mobile)
 - 🔑 **Internal API (API Key)** - For service-to-service communication
 - 📊 **Monitoring API (Public)** - For internal monitoring tools
@@ -409,6 +434,7 @@ cours-backend/
 ## 🔒 Security & Configuration
 
 - **`.gitignore`** - Prevents sensitive files from being committed:
+
   - `application.properties` files (contain database credentials)
   - Maven target directories
   - IDE configuration files
@@ -425,6 +451,7 @@ cours-backend/
 ## 🎓 School Project Context
 
 This project demonstrates:
+
 - **Microservices Architecture** - Independent, scalable services
 - **REST API Design** - Clean, RESTful endpoints
 - **Database Design** - One database per service
@@ -445,6 +472,7 @@ This project demonstrates:
 ## 🏆 Perfect for Presentations
 
 This architecture is:
+
 - ✅ Easy to understand and explain
 - ✅ Demonstrates real-world microservices patterns
 - ✅ Fully functional and testable
