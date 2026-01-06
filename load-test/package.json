@@ -1,0 +1,16 @@
+{
+  "name": "load-test",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "artillery run test.yml"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "artillery": "^2.0.27",
+    "jsonwebtoken": "^9.0.3"
+  }
+}
