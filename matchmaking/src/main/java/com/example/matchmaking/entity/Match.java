@@ -15,8 +15,8 @@ import lombok.Data;
 @Entity
 @Data
 @Table(name = "matches", indexes = {
-        @Index(name = "idx_matches_player1_created_at", columnList = "player1_id, created_at"),
-        @Index(name = "idx_matches_player2_created_at", columnList = "player2_id, created_at"),
+        @Index(name = "idx_matches_player1_created_at", columnList = "player1id, created_at"),
+        @Index(name = "idx_matches_player2_created_at", columnList = "player2id, created_at"),
         @Index(name = "idx_matches_status_created_at", columnList = "status, created_at"),
         @Index(name = "idx_matches_status_completed_at", columnList = "status, completed_at"),
         @Index(name = "idx_matches_winner_id", columnList = "winner_id")
