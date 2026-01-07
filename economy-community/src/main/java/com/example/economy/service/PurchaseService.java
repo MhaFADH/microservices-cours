@@ -12,6 +12,8 @@ import com.example.economy.repository.PurchaseRepository;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 @Service
 @RequiredArgsConstructor
 public class PurchaseService {
@@ -37,8 +39,10 @@ public class PurchaseService {
     }
 
     @Cacheable(value = "allPurchases")
-    public List<Purchase> getAllPurchases() {
-        return purchaseRepository.findAll();
+     public Page<Purchase> getAllPurchases(int page, int size) {
+        PageRequest pageable = PageRequest.of(page, size);
+
+        return purchaseRepository.findAll(pageable);
     }
 
     @Cacheable(value = "purchases", key = "#id")
