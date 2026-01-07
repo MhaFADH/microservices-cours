@@ -7,12 +7,13 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
-
 import com.example.economy.dto.PostDTO;
 import com.example.economy.entity.Post;
 import com.example.economy.repository.PostRepository;
-
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+
 
 @Service
 @RequiredArgsConstructor
@@ -40,8 +41,13 @@ public class PostService {
     }
 
     @Cacheable(value = "allPosts")
-    public List<Post> getAllPosts() {
-        return postRepository.findAll();
+    public Page<Post> getAllPosts(
+        int page,
+        int size
+    ) {
+        PageRequest pageable = PageRequest.of(page, size);
+        
+        return postRepository.findAll(pageable);
     }
 
     @Cacheable(value = "posts", key = "#id")

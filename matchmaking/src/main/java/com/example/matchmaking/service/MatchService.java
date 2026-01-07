@@ -1,5 +1,13 @@
 package com.example.matchmaking.service;
 
+import com.example.matchmaking.entity.Match;
+import com.example.matchmaking.repository.MatchRepository;
+import lombok.RequiredArgsConstructor;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -7,13 +15,6 @@ import java.util.Map;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.example.matchmaking.entity.Match;
-import com.example.matchmaking.repository.MatchRepository;
-
-import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -81,8 +82,10 @@ public class MatchService {
     }
 
     @Cacheable(value = "allMatches")
-    public List<Match> getAllMatches() {
-        return matchRepository.findAll();
+    public Page<Match> getAllMatches(int page, int size) {
+        PageRequest pageable = PageRequest.of(page, size);
+
+        return matchRepository.findAll(pageable);
     }
 
     @Cacheable(value = "matches", key = "#id")

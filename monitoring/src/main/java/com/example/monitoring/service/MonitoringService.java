@@ -6,6 +6,8 @@ import com.example.monitoring.repository.LogEntryRepository;
 import com.example.monitoring.repository.MetricRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -73,8 +75,10 @@ public class MonitoringService {
         }
     }
 
-    public List<Metric> getAllMetrics() {
-        return metricRepository.findAll();
+    public Page<Metric> getAllMetrics(int page, int size) {
+        PageRequest pageable = PageRequest.of(page, size);
+
+        return metricRepository.findAll(pageable);
     }
 
     public List<Metric> getMetricsByService(String serviceUrl) {

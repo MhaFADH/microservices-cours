@@ -4,6 +4,8 @@ import com.example.economy.dto.PurchaseDTO;
 import com.example.economy.entity.Purchase;
 import com.example.economy.service.PurchaseService;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -22,8 +24,8 @@ public class PurchaseController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Purchase>> getAllPurchases() {
-        return ResponseEntity.ok(purchaseService.getAllPurchases());
+    public ResponseEntity<Page<Purchase>> getAllPurchases(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(purchaseService.getAllPurchases(page, size));
     }
 
     @GetMapping("/{id}")

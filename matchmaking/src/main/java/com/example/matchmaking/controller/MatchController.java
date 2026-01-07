@@ -4,6 +4,8 @@ import com.example.matchmaking.dto.CompleteMatchDTO;
 import com.example.matchmaking.entity.Match;
 import com.example.matchmaking.service.MatchService;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -31,8 +33,8 @@ public class MatchController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Match>> getAllMatches() {
-        return ResponseEntity.ok(matchService.getAllMatches());
+    public ResponseEntity<Page<Match>> getAllMatches(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(matchService.getAllMatches(page, size));
     }
 
     @GetMapping("/{id}")
