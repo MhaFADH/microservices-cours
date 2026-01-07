@@ -1,12 +1,18 @@
 package com.example.identity.service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Service;
+
 import com.example.identity.dto.UserDTO;
 import com.example.identity.entity.User;
 import com.example.identity.repository.UserRepository;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -15,12 +21,14 @@ public class UserService {
     private final UserRepository userRepository;
     private final LogService logService;
 
+    @Cacheable(value = "allUsers")
     public List<UserDTO> getAllUsers() {
         return userRepository.findAll().stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
 
+    @Cacheable(value = "users", key = "#id")
     public UserDTO getUserById(String id) {
         System.out.println("=== UserService.getUserById ===");
         System.out.println("Looking for user with ID: '" + id + "'");
@@ -37,6 +45,8 @@ public class UserService {
         return toDTO(user);
     }
 
+    @CachePut(value = "users", key = "#id")
+    @CacheEvict(value = "allUsers", allEntries = true)
     public UserDTO updateMmr(String id, Integer mmr) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -46,6 +56,7 @@ public class UserService {
         return toDTO(user);
     }
 
+    @CacheEvict(value = { "users", "allUsers" }, key = "#id", allEntries = true)
     public void deleteUser(String id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));

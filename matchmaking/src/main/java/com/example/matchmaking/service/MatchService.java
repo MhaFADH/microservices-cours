@@ -1,13 +1,19 @@
 package com.example.matchmaking.service;
 
-import com.example.matchmaking.entity.Match;
-import com.example.matchmaking.repository.MatchRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.example.matchmaking.entity.Match;
+import com.example.matchmaking.repository.MatchRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -18,6 +24,7 @@ public class MatchService {
     private final LogService logService;
     private final MetricsService metricsService;
 
+    @CacheEvict(value = { "allMatches", "playerMatches" }, allEntries = true)
     public Match createMatch(String player1Id, String player2Id) {
         Match match = new Match();
         match.setPlayer1Id(player1Id);
@@ -31,6 +38,8 @@ public class MatchService {
     }
 
     @Transactional
+    @CachePut(value = "matches", key = "#matchId")
+    @CacheEvict(value = { "allMatches", "playerMatches" }, allEntries = true)
     public Match completeMatch(String matchId, String winnerId) {
         Match match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new RuntimeException("Match not found"));
@@ -71,15 +80,18 @@ public class MatchService {
         return match;
     }
 
+    @Cacheable(value = "allMatches")
     public List<Match> getAllMatches() {
         return matchRepository.findAll();
     }
 
+    @Cacheable(value = "matches", key = "#id")
     public Match getMatchById(String id) {
         return matchRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Match not found"));
     }
 
+    @Cacheable(value = "playerMatches", key = "#playerId")
     public List<Match> getPlayerMatches(String playerId) {
         return matchRepository.findByPlayer1IdOrPlayer2Id(playerId, playerId);
     }

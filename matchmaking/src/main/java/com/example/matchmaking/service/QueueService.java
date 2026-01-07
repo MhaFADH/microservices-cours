@@ -1,12 +1,17 @@
 package com.example.matchmaking.service;
 
-import com.example.matchmaking.entity.QueueEntry;
-import com.example.matchmaking.repository.QueueRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Map;
+
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.example.matchmaking.entity.QueueEntry;
+import com.example.matchmaking.repository.QueueRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -18,6 +23,7 @@ public class QueueService {
     private final MetricsService metricsService;
 
     @Transactional
+    @CacheEvict(value = "queue", allEntries = true)
     public QueueEntry joinQueue(String playerId) {
         if (queueRepository.existsByPlayerId(playerId)) {
             logService.log("WARN", "Player already in queue: " + playerId);
@@ -38,6 +44,7 @@ public class QueueService {
     }
 
     @Transactional
+    @CacheEvict(value = "queue", allEntries = true)
     public void leaveQueue(String playerId) {
         if (!queueRepository.existsByPlayerId(playerId)) {
             logService.log("WARN", "Player not in queue: " + playerId);
@@ -48,6 +55,7 @@ public class QueueService {
         logService.log("INFO", "Player left queue: " + playerId);
     }
 
+    @Cacheable(value = "queue")
     public List<QueueEntry> getQueue() {
         return queueRepository.findAll();
     }
