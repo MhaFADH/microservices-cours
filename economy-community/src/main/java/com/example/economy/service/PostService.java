@@ -1,12 +1,18 @@
 package com.example.economy.service;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Service;
+
 import com.example.economy.dto.PostDTO;
 import com.example.economy.entity.Post;
 import com.example.economy.repository.PostRepository;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -17,6 +23,7 @@ public class PostService {
     private final LogService logService;
     private final MetricsService metricsService;
 
+    @CacheEvict(value = { "allPosts", "authorPosts" }, allEntries = true)
     public Post createPost(PostDTO dto) {
         identityClient.getUserById(dto.getAuthorId());
 
@@ -32,19 +39,24 @@ public class PostService {
         return post;
     }
 
+    @Cacheable(value = "allPosts")
     public List<Post> getAllPosts() {
         return postRepository.findAll();
     }
 
+    @Cacheable(value = "posts", key = "#id")
     public Post getPostById(String id) {
         return postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
     }
 
+    @Cacheable(value = "authorPosts", key = "#authorId")
     public List<Post> getAuthorPosts(String authorId) {
         return postRepository.findByAuthorId(authorId);
     }
 
+    @CachePut(value = "posts", key = "#id")
+    @CacheEvict(value = { "allPosts", "authorPosts" }, allEntries = true)
     public Post updatePost(String id, PostDTO dto) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
@@ -62,6 +74,7 @@ public class PostService {
         return post;
     }
 
+    @CachePut(value = "posts", key = "#id")
     public Post likePost(String id) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
@@ -73,6 +86,7 @@ public class PostService {
         return post;
     }
 
+    @CacheEvict(value = { "posts", "allPosts", "authorPosts" }, key = "#id", allEntries = true)
     public void deletePost(String id) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
